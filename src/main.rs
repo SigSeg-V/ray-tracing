@@ -1,7 +1,10 @@
 mod error;
 mod prelude;
+mod vec3;
 
 use std::io::Write;
+
+use vec3::Color;
 
 use crate::prelude::*;
 
@@ -20,20 +23,16 @@ fn main() -> Result<()> {
     // defining the color intensity (0-255)
     image.push_str(&fmt!("{MAX_INTENSITY}\n"));
 
-    for j in 0..IMAGE_HEIGHT {
-        eprint!("\rScan lines remaining: {}", IMAGE_HEIGHT-j);
+    for y in 0..IMAGE_HEIGHT {
+        eprint!("\rScan lines remaining: {}", IMAGE_HEIGHT-y);
         std::io::stderr().flush()?;
-        for i in 0..IMAGE_WIDTH {
+        for x in 0..IMAGE_WIDTH {
             // calculate RGB with a 0..=1.0 intensity, then scale to our format's integral intensity
-            let r = i as f64/(IMAGE_HEIGHT-1) as f64;
-            let g = j as f64/(IMAGE_HEIGHT-1) as f64;
-            let b = 0.;
 
-            let r = (r * (MAX_INTENSITY as f64)).clamp(0., MAX_INTENSITY as f64) as u8;
-            let g = (g * (MAX_INTENSITY as f64)).clamp(0., MAX_INTENSITY as f64) as u8;
-            let b = (b * (MAX_INTENSITY as f64)).clamp(0., MAX_INTENSITY as f64) as u8;
+            let pixel_color = Color::new(x as f32/(IMAGE_HEIGHT-1) as f32, y as f32/(IMAGE_HEIGHT-1) as f32, 0.);
 
-            image.push_str(&fmt!("{r} {g} {b}\n"));
+            // add pixel row to image
+            image.push_str(&(pixel_color.to_string() + "\n"));
         }
     }
 
