@@ -187,3 +187,103 @@ impl Display for Color {
         write!(f, "{r} {g} {b}")
     }
 }
+
+// -Color
+impl Neg for Color {
+    type Output = Color;
+ 
+    fn neg(self) -> Color {
+        Color(-self.0, -self.1, -self.2)
+    }
+}
+ 
+// Color += Color
+impl AddAssign for Color {
+    fn add_assign(&mut self, rhs: Color) {
+        self.0 += rhs.0;
+        self.1 += rhs.1;
+        self.2 += rhs.2;
+    }
+}
+ 
+// Color -= Color
+impl SubAssign for Color {
+    fn sub_assign(&mut self, rhs: Color) {
+        self.0 -= rhs.0;
+        self.1 -= rhs.1;
+        self.2 -= rhs.2;
+    }
+}
+
+// Color *= f32
+impl MulAssign<f32> for Color {
+    fn mul_assign(&mut self, t: f32) {
+        self.0 *= t;
+        self.1 *= t;
+        self.2 *= t;
+    }
+}
+ 
+// Color /= f32
+impl DivAssign<f32> for Color {
+    fn div_assign(&mut self, t: f32) {
+
+        self.2 /= t;
+        self.2 /= t;
+        self.2 /= t;
+    }
+}
+ 
+// Color + Color
+impl Add for Color {
+    type Output = Color;
+ 
+    fn add(self, rhs: Color) -> Color {
+        Color(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    }
+}
+ 
+// Color - Color
+impl Sub for Color {
+    type Output = Color;
+ 
+    fn sub(self, rhs: Color) -> Color {
+        Color(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+ 
+// Color * Color
+impl Mul for Color {
+    type Output = Color;
+ 
+    fn mul(self, rhs: Color) -> Color {
+        Color(self.0 * rhs.0, self.1 * rhs.1, self.2 * rhs.2)
+    }
+}
+ 
+// f32 * Color
+impl Mul<Color> for f32 {
+    type Output = Color;
+ 
+    fn mul(self, rhs: Color) -> Color {
+        Color(self * rhs.0, self * rhs.1, self * rhs.2)
+    }
+}
+ 
+// Color * f32
+impl Mul<f32> for Color {
+    type Output = Color;
+ 
+    fn mul(self, t: f32) -> Color {
+        Color(self.0 * t, self.1 * t, self.2 * t)
+    }
+}
+ 
+// Color / f32
+impl Div<f32> for Color {
+    type Output = Color;
+ 
+    fn div(self, t: f32) -> Color {
+        Color(self.0 / t, self.1 / t, self.2 / t)
+    }
+}
