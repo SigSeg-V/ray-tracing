@@ -177,13 +177,15 @@ impl Color {
     pub fn  b(&self) -> f32 {
         self.2
     }
+    
+    pub fn to_rgb(&self) -> [u8; 3] {
+        [(self.r() * 255.999) as u8, (self.g() * 255.999) as u8, (self.b() * 255.999) as u8]
+    }
 }
 
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let r = (self.r() * 255.999) as u8;
-        let g = (self.g() * 255.999) as u8;
-        let b = (self.b() * 255.999) as u8;
+        let [r,g,b] = self.to_rgb();
         write!(f, "{r} {g} {b}")
     }
 }
