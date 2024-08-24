@@ -9,7 +9,7 @@ pub fn spectrum() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
 
     for (x, y, px) in imgbuf.enumerate_pixels_mut() {
         let pixel_color = Color::new(
-            x as f32 / (IMAGE_HEIGHT - 1) as f32,
+            x as f32 / (IMAGE_WIDTH - 1) as f32,
             y as f32 / (IMAGE_HEIGHT - 1) as f32,
             0.,
         );
