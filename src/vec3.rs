@@ -5,12 +5,12 @@ pub struct Vec3(f32, f32, f32);
 
 impl Vec3 {
 
-    fn len_sq(&self) -> f32 {
+    pub fn len_sq(&self) -> f32 {
         self.0*self.0 + self.1*self.1 + self.2*self.2
     }
 
 
-    fn len(&self) -> f32 {
+    pub fn len(&self) -> f32 {
         self.len_sq().sqrt()
     }
 
