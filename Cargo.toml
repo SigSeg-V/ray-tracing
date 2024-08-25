@@ -6,4 +6,4 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.63"
 log = "0.4.22"
-image = "0.25"
+image = { version = "0.25", features = ["rayon", "png"] }
