@@ -1,5 +1,7 @@
 use std::{fmt::Display, ops::{Add, Mul, Sub, Div, Neg, AddAssign, SubAssign, MulAssign, DivAssign}};
 
+use crate::utils::Interval;
+
 #[derive(Default, Copy, Clone)]
 pub struct Vec3(f32, f32, f32);
 
@@ -179,7 +181,8 @@ impl Color {
     }
     
     pub fn to_rgb(&self) -> [u8; 3] {
-        [(self.r() * 255.999) as u8, (self.g() * 255.999) as u8, (self.b() * 255.999) as u8]
+        let intensity = Interval::from(0.,0.999);
+        [(intensity.clamp(self.r()) * 256.) as u8, (intensity.clamp(self.g()) * 256.) as u8, (intensity.clamp(self.b()) * 256.) as u8]
     }
 }
 

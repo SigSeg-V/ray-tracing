@@ -1,4 +1,4 @@
-use crate::math;
+use crate::utils;
 use crate::vec3::{Color, Point3, Vec3};
 use crate::ray::Ray;
 use image::ImageBuffer;
@@ -93,5 +93,5 @@ fn hit_sphere(center: &Point3, radius: f32, ray: &Ray) -> bool {
     let b = -2. * camera_to_center.dot(ray.direction());
     let c = camera_to_center.dot(&camera_to_center) - radius * radius;
 
-    math::discriminant_intersections(a, b, c).is_some()
+    utils::math::discriminant_intersections(a, b, c).is_some()
 }
