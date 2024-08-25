@@ -1,4 +1,4 @@
-use crate::{interval::Interval, math, vec3::Point3};
+use crate::{utils::{self, Interval}, vec3::Point3};
 
 use super::{HitRecord, Hittable};
 
@@ -46,7 +46,7 @@ impl Hittable for Sphere {
         let h = camera_to_center.dot(ray.direction());
         let c = camera_to_center.len_sq() - self.radius * self.radius;
 
-        if let Some((minus, plus)) = math::quadratic_formula(a, h, c) {
+        if let Some((minus, plus)) = utils::math::quadratic_formula(a, h, c) {
             // find the closest root to the camera that is within tmin and tmax
             let root = match ray_t {
                 x if x.surrounds(minus) => minus,

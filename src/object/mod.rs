@@ -1,7 +1,10 @@
-use crate::{interval::Interval, ray::Ray, vec3::{Point3, Vec3}};
+use crate::{utils::Interval, ray::Ray, vec3::{Point3, Vec3}};
 
 pub mod sphere;
+pub mod world;
+use enum_dispatch::enum_dispatch;
 pub use sphere::Sphere;
+pub use world::World;
 
 #[derive(Clone)]
 pub struct HitRecord {
@@ -21,7 +24,13 @@ impl HitRecord {
     }
 }   
 
-
+#[enum_dispatch]
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord>;
+}
+
+#[enum_dispatch(Hittable)]
+pub enum Object {
+    World,
+    Sphere,
 }

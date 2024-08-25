@@ -7,3 +7,6 @@ edition = "2021"
 thiserror = "1.0.63"
 log = "0.4.22"
 image = { version = "0.25", features = ["rayon", "png"] }
+rayon = "1.10"
+rand = "0.8.5"
+enum_dispatch = "0.3.13"

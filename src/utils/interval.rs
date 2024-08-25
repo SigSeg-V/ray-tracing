@@ -29,4 +29,14 @@ impl Interval {
     pub fn empty() -> Self {
         Interval::new()
     }
+
+    pub fn clamp(&self, x: f32) -> f32 {
+        if x < self.min {
+            self.min
+        } else if x > self.max {
+            self.max
+        } else {
+            x
+        }
+    }
 }
