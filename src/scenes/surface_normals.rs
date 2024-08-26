@@ -11,7 +11,8 @@ use image::ImageBuffer;
 pub fn surface_normals() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let aspect_ratio = 16./9.;
     let image_width: u32 = 1920;
-    let num_samples = 100;
+    let num_samples = 300;
+    let max_bounce_depth = 10;
 
     // world
     let mut world = World::new();
@@ -24,7 +25,7 @@ pub fn surface_normals() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
         Point3::new(0., -100.5, -1.), 100.
     )));
 
-    let mut camera = Camera::from(aspect_ratio, image_width, 300);
+    let camera = Camera::from(aspect_ratio, image_width, num_samples, max_bounce_depth);
 
     camera.render(world)
 }

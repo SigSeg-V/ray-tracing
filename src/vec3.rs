@@ -1,6 +1,6 @@
-use std::{fmt::Display, ops::{Add, Mul, Sub, Div, Neg, AddAssign, SubAssign, MulAssign, DivAssign}};
+use std::{fmt::Display, ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Range, Sub, SubAssign}};
 
-use crate::utils::Interval;
+use crate::utils::{rng::{random_float, random_float_range}, Interval};
 
 #[derive(Default, Copy, Clone)]
 pub struct Vec3(f32, f32, f32);
@@ -49,6 +49,39 @@ impl Vec3 {
     
     pub fn z(&self) -> f32 {
         self.2
+    }
+
+    pub fn random() -> Self {
+        Self(random_float(), random_float(), random_float())
+    }
+
+    pub fn random_range(range: Range<f32>) -> Self {
+        Self(random_float_range(range.clone()), random_float_range(range.clone()), random_float_range(range))
+    }
+
+    pub fn unit_mut(&mut self) {
+        *self /= self.len();
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let  v = Vec3::random_range(-1.0f32..1.0f32);
+            if v.len_sq() < 1. {
+                return v;
+            }
+        }
+    }
+
+    pub fn random_unit() -> Vec3 {
+        Self::random_in_unit_sphere().unit()
+    }
+
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Self::random_unit();
+        if on_unit_sphere.dot(normal) > 0. { // in the same hemisphere as normal
+            return on_unit_sphere;
+        }
+        -on_unit_sphere
     }
 }
 
@@ -183,6 +216,18 @@ impl Color {
     pub fn to_rgb(&self) -> [u8; 3] {
         let intensity = Interval::from(0.,0.999);
         [(intensity.clamp(self.r()) * 256.) as u8, (intensity.clamp(self.g()) * 256.) as u8, (intensity.clamp(self.b()) * 256.) as u8]
+    }
+
+    pub fn to_gamma(&self) -> Color {
+        Color(
+            Self::linear_to_gamma(self.r()), 
+            Self::linear_to_gamma(self.g()), 
+            Self::linear_to_gamma(self.b())
+        )
+    }
+
+    fn linear_to_gamma(linear: f32) -> f32 {
+        if linear > 0. { linear.sqrt() } else { 0. }
     }
 }
 

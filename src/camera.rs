@@ -16,6 +16,7 @@ pub struct Camera {
     px_dy: Vec3, // distance between pixels in the y axis in viewport
     num_samples: u32, // number of samples taken of each pixel in the frame
     px_sample_scale: f32, // Color scale factor for a sum of pixel samples
+    max_bounce_depth: u32, // maximum number of bounces a ray can perform before expiring
 }
 
 impl Camera {
@@ -38,10 +39,10 @@ impl Camera {
             let mut color = Color::new(0., 0., 0.);
             for _ in 0..self.num_samples {
                 let ray = self.get_ray(x, y);
-                color += Self::ray_color(&ray, &world);
+                color += Self::ray_color(&ray, &world, self.max_bounce_depth);
             }
             
-            *px = image::Rgb((color * self.px_sample_scale).to_rgb());
+            *px = image::Rgb((color * self.px_sample_scale).to_gamma().to_rgb());
         });
         let time_after = Instant::now();
         let time = time_after - time_before;
@@ -51,7 +52,7 @@ impl Camera {
         imgbuf
     }
 
-    pub fn from(aspect_ratio: f32, image_width: u32, num_samples: u32) -> Camera {
+    pub fn from(aspect_ratio: f32, image_width: u32, num_samples: u32, max_bounce_depth: u32) -> Camera {
         // calc img height, it has to be at least 1 px
         let image_height = (image_width as f32 / aspect_ratio) as u32;
         let image_height = if image_height > 0 { image_height } else { 1 };
@@ -90,6 +91,7 @@ impl Camera {
             px_dy,
             num_samples,
             px_sample_scale,
+            max_bounce_depth
         }
     }
 
@@ -104,10 +106,13 @@ impl Camera {
         return Ray::new(self.camera_pos, direction);
     }
 
-    fn ray_color(ray: &Ray, world: &World) -> Color {
-        if let Some(record) = world.hit(ray, Interval::from(0., f32::INFINITY)) {
-            let colors = record.normal + Vec3::new(1., 1., 1.);
-            return 0.5 * (Color::new(colors.x(), colors.y(), colors.z()));
+    fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Color {
+        if num_bounces == 0 { // hit recursion limit
+            return Color::new(0., 0., 0.);
+        }
+        if let Some(record) = world.hit(ray, Interval::from(0.001, f32::INFINITY)) { // from 0.001 to fix shadow acne, where rays bounce many times off same point
+            let direction = Vec3::random_on_hemisphere(&record.normal) + record.normal; // lambertian distribution to mimic random reflection
+            return 0.5 * Self::ray_color(&Ray::new(record.point, direction), world, num_bounces - 1); // diffuse 50% of the color from a bounce
         }
         
         // background color
