@@ -98,12 +98,31 @@ impl Vec3 {
         self.0.abs() < LIMIT && self.1.abs() < LIMIT && self.2.abs() < LIMIT
     }
 
-    pub fn reflect(&self, other: &Vec3) -> Vec3 {
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
         // reflection of vector is V - 2b
         // where b is distance from V to surface
         // because V points into the surface b
         // needs to be negated
-        *self - (2. * other.clone() * self.dot(other))
+        *self - (2. * normal.clone() * self.dot(normal))
+    }
+
+    /// This returns a vector resulting in the refraction of incident vector `self`.
+    /// R = R_parallel + R_perpendicular
+    /// R_parallel = -sqrt( 1 - |R_perpendicular|^2 * N )
+    /// R_perpendicular = RI_incident/RI_refraction * (R + (-r.N) * N)
+    ///
+    /// Params:
+    /// * `normal` - surface normal of the material hit
+    /// * `ri ratio` - ratio of refractive index:
+    /// [material incident vector is in] / [material hit]
+    pub fn refract(&self, normal: &Vec3, ri_ratio: f32) -> Vec3 {
+        let cos_theta = 1.0f32.min((-*self).dot(normal));
+
+        // type inference fking up here??
+        let r_perpendicular = ri_ratio * (*self + cos_theta * normal.clone());
+        let r_parallel = -((1. - r_perpendicular.len_sq()).abs().sqrt()) * normal.clone();
+
+        r_perpendicular + r_parallel
     }
 }
 
