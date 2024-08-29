@@ -1,11 +1,13 @@
-mod error;
-mod prelude;
-mod vec3;
-mod scenes;
-mod ray;
-mod object;
-mod utils;
+#![allow(warnings)]
 mod camera;
+mod error;
+mod material;
+mod object;
+mod prelude;
+mod ray;
+mod scenes;
+mod utils;
+mod vec3;
 
 use vec3::Color;
 

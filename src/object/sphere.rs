@@ -1,15 +1,24 @@
-use crate::{utils::{self, Interval}, vec3::Point3};
+use crate::{
+    material::Material,
+    utils::{self, Interval},
+    vec3::Point3,
+};
 
 use super::{HitRecord, Hittable};
 
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f32, material: Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -56,14 +65,24 @@ impl Hittable for Sphere {
 
             // assemble hit record
             let point = ray.at(root);
-            let record = HitRecord::new(
-                root,
-                ray,
-                point,
-                (point - self.center)/self.radius,
-            );
+            let record = {
+                let outward_normal = (point - self.center) / self.radius;
+                let front_face = ray.direction().dot(&outward_normal) < 0.;
+                let normal = if front_face {
+                    outward_normal
+                } else {
+                    -outward_normal
+                };
+                HitRecord {
+                    point,
+                    normal,
+                    t: root,
+                    front_face,
+                    material: self.material.clone(),
+                }
+            };
 
-            return Some(record)
+            return Some(record);
         }
 
         None
