@@ -4,16 +4,16 @@ use crate::object::{Object, Sphere, World};
 use crate::vec3::{Color, Point3, Vec3};
 use image::ImageBuffer;
 
-pub fn surface_normals() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
+pub fn moveable_camera() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let aspect_ratio = 16. / 9.;
     let image_width: u32 = 1920;
-    let fov = 65.;
+    let fov = 90.;
     let focal_length = 1.;
     let num_samples = 300;
     let max_bounce_depth = 8;
     let camera_pos = Point3::new(-2., 2., 1.);
     let target = Point3::new(0., 0., -1.);
-    let direction = camera_pos - target;
+    let direction = target - camera_pos;
     let camera_up = Vec3::new(0., 1., 0.);
 
     // world

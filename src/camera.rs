@@ -8,20 +8,24 @@ use crate::{
     material::Scatter,
     object::{Hittable, World},
     ray::Ray,
-    utils::{self, rng::random_float, Interval},
+    utils::{self, math, rng::random_float, Interval},
     vec3::{Color, Point3, Vec3},
 };
 
 pub struct Camera {
-    aspect_ratio: f32,     // ratio of image width / height
-    image_width: u32,      // image width in px
-    image_height: u32,     // image height in px
-    camera_pos: Point3,    // center point of the camera
-    px_top_left: Vec3,     // location of the top left pixel in the viewport
-    px_dx: Vec3,           // distance between pixels in the x axis in viewport
-    px_dy: Vec3,           // distance between pixels in the y axis in viewport
-    num_samples: u32,      // number of samples taken of each pixel in the frame
-    px_sample_scale: f32,  // Color scale factor for a sum of pixel samples
+    aspect_ratio: f32,                      // ratio of image width / height
+    image_width: u32,                       // image width in px
+    image_height: u32,                      // image height in px
+    camera_pos: Point3,                     // center point of the camera
+    fov: f32,                               // vertical fov of the camera
+    direction: Vec3, // unit vector for the direction the camera is pointing in
+    camera_up: Vec3, // Camera-relative up direction
+    camera_basis_frame: (Vec3, Vec3, Vec3), // camera basis frame
+    px_top_left: Vec3, // location of the top left pixel in the viewport
+    px_dx: Vec3,     // distance between pixels in the x axis in viewport
+    px_dy: Vec3,     // distance between pixels in the y axis in viewport
+    num_samples: u32, // number of samples taken of each pixel in the frame
+    px_sample_scale: f32, // Color scale factor for a sum of pixel samples
     max_bounce_depth: u32, // maximum number of bounces a ray can perform before expiring
 }
 
@@ -42,7 +46,7 @@ impl Camera {
         // });
 
         let time_before = Instant::now();
-        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, px)| {
+        imgbuf.enumerate_pixels_mut().for_each(|(x, y, px)| {
             let mut color = Color::new(0., 0., 0.);
             for _ in 0..self.num_samples {
                 let ray = self.get_ray(x, y);
@@ -64,6 +68,10 @@ impl Camera {
         image_width: u32,
         num_samples: u32,
         max_bounce_depth: u32,
+        fov: f32,
+        direction: Vec3,
+        camera_up: Vec3,
+        camera_pos: Vec3,
     ) -> Camera {
         // calc img height, it has to be at least 1 px
         let image_height = (image_width as f32 / aspect_ratio) as u32;
@@ -72,25 +80,32 @@ impl Camera {
         // Camera
         // real aspect ratio differs because of flooring when converting to a u32
         let real_aspect_ratio = image_width as f32 / image_height as f32;
-        let viewport_height = 2.0f32;
+        let focal_length = direction.len();
+        // calc viewport height from fov
+        let theta = math::deg_to_rad(fov);
+        let h = (theta / 2.).tan();
+        let viewport_height = 2. * h * focal_length;
         let viewport_width = viewport_height * (real_aspect_ratio);
-        let focal_length = 1.0f32;
-        let camera_pos = Point3::new(0., 0., 0.);
+
+        // init camera basis frame
+        let w = direction.unit();
+        let u = camera_up.cross(&w).unit();
+        let v = w.cross(&u);
+        let camera_basis_frame = (w, u, v);
 
         // sampling
         let px_sample_scale = 1. / num_samples as f32;
 
         // direction to render pixels in
-        let viewport_x = Vec3::new(viewport_width, 0., 0.);
-        let viewport_y = Vec3::new(0., -viewport_height, 0.); // invert viewport height to start top and go to bottom
+        let viewport_x = viewport_width * u;
+        let viewport_y = viewport_height * -v; // invert viewport height to start top and go to bottom
 
         // distance between pixel center points
         let px_dx = viewport_x / image_width as f32;
         let px_dy = viewport_y / image_height as f32;
 
         // calc the location of the top left pixel
-        let viewport_top_left =
-            camera_pos - Vec3::new(0., 0., focal_length) - viewport_x / 2. - viewport_y / 2.;
+        let viewport_top_left = camera_pos - focal_length * w - viewport_x / 2. - viewport_y / 2.;
         let px_top_left = viewport_top_left + 0.5 * (px_dx + px_dy);
 
         Camera {
@@ -104,6 +119,10 @@ impl Camera {
             num_samples,
             px_sample_scale,
             max_bounce_depth,
+            fov,
+            direction,
+            camera_up,
+            camera_basis_frame,
         }
     }
 
