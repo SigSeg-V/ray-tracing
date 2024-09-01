@@ -3,6 +3,8 @@ use std::{
     ops::{Add, AddAssign, DerefMut, Div, DivAssign, Mul, MulAssign, Neg, Range, Sub, SubAssign},
 };
 
+use rand::random;
+
 use crate::utils::{
     rng::{random_float, random_float_range},
     Interval,
@@ -78,6 +80,22 @@ impl Vec3 {
                 return v;
             }
         }
+    }
+
+    // returns a unit sphere or circle on the axes that are not 0
+    pub fn random_in_unit_dim(dimensions: Vec3) -> Vec3 {
+        // cap to unit
+        let dimensions = Vec3::new(
+            1.0f32.min(dimensions.x().max(0.)),
+            1.0f32.min(dimensions.y().max(0.)),
+            1.0f32.min(dimensions.z().max(0.)),
+        );
+
+        Vec3::random_in_unit_sphere() * dimensions
+    }
+
+    pub fn random_in_unit_circle_xy() -> Vec3 {
+        Self::random_in_unit_dim(Vec3::new(1., 1., 0.))
     }
 
     pub fn random_unit() -> Vec3 {

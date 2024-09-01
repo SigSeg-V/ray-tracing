@@ -8,7 +8,12 @@ use crate::{
     material::Scatter,
     object::{Hittable, World},
     ray::Ray,
-    utils::{self, math, rng::random_float, Interval},
+    utils::{
+        self,
+        math::{self, deg_to_rad},
+        rng::random_float,
+        Interval,
+    },
     vec3::{Color, Point3, Vec3},
 };
 
@@ -27,6 +32,9 @@ pub struct Camera {
     num_samples: u32, // number of samples taken of each pixel in the frame
     px_sample_scale: f32, // Color scale factor for a sum of pixel samples
     max_bounce_depth: u32, // maximum number of bounces a ray can perform before expiring
+    depth_of_field_angle: f32, // variation angle of rays through each pixel
+    focus_distance: f32, // distance from the camera to the plane of perfect focus
+    defocus_disk: (Vec3, Vec3), // defocus disk x and y radius
 }
 
 impl Camera {
@@ -69,6 +77,8 @@ impl Camera {
         num_samples: u32,
         max_bounce_depth: u32,
         fov: f32,
+        focus_distance: f32,
+        depth_of_field_angle: f32,
         direction: Vec3,
         camera_up: Vec3,
         camera_pos: Vec3,
@@ -80,11 +90,11 @@ impl Camera {
         // Camera
         // real aspect ratio differs because of flooring when converting to a u32
         let real_aspect_ratio = image_width as f32 / image_height as f32;
-        let focal_length = direction.len();
+
         // calc viewport height from fov
         let theta = math::deg_to_rad(fov);
         let h = (theta / 2.).tan();
-        let viewport_height = 2. * h * focal_length;
+        let viewport_height = 2. * h * focus_distance;
         let viewport_width = viewport_height * (real_aspect_ratio);
 
         // init camera basis frame
@@ -105,8 +115,11 @@ impl Camera {
         let px_dy = viewport_y / image_height as f32;
 
         // calc the location of the top left pixel
-        let viewport_top_left = camera_pos - focal_length * w - viewport_x / 2. - viewport_y / 2.;
+        let viewport_top_left = camera_pos - focus_distance * w - viewport_x / 2. - viewport_y / 2.;
         let px_top_left = viewport_top_left + 0.5 * (px_dx + px_dy);
+
+        let defocus_radius = focus_distance * deg_to_rad(depth_of_field_angle / 2.).tan();
+        let defocus_disk = (u * defocus_radius, v * defocus_radius);
 
         Camera {
             aspect_ratio,
@@ -123,6 +136,9 @@ impl Camera {
             direction,
             camera_up,
             camera_basis_frame,
+            depth_of_field_angle,
+            focus_distance,
+            defocus_disk,
         }
     }
 
@@ -134,8 +150,14 @@ impl Camera {
         let px_sample =
             self.px_top_left + ((x + offset.x()) * self.px_dx) + ((y + offset.y()) * self.px_dy);
 
-        let direction = px_sample - self.camera_pos;
-        return Ray::new(self.camera_pos, direction);
+        let origin = if self.depth_of_field_angle > 0. {
+            self.depth_of_field_disk_sample()
+        } else {
+            self.camera_pos
+        };
+
+        let direction = px_sample - origin;
+        return Ray::new(origin, direction);
     }
 
     fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Color {
@@ -163,5 +185,13 @@ impl Camera {
 
     fn sample_square() -> Vec3 {
         Vec3::new(utils::rng::random_float() - 0.5, random_float() - 0.5, 0.)
+    }
+
+    fn depth_of_field_disk_sample(&self) -> Point3 {
+        // get a random point in the camera DoF disk or lens
+        let point = Vec3::random_in_unit_circle_xy();
+        return self.camera_pos
+            + (point.x() * self.defocus_disk.0)
+            + (point.y() * self.defocus_disk.1);
     }
 }
