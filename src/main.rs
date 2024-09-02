@@ -15,7 +15,7 @@ use crate::prelude::*;
 
 fn main() -> Result<()> {
     // creating a PPM image
-    let imgbuf = scenes::surface_normals();
+    let imgbuf = scenes::large_scene();
     imgbuf.save("image.png").unwrap();
     Ok(())
 }

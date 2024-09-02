@@ -301,6 +301,10 @@ impl Color {
         const LIMIT: f32 = 1e-6;
         self.0.abs() < LIMIT && self.1.abs() < LIMIT && self.2.abs() < LIMIT
     }
+
+    pub fn random() -> Self {
+        Color::new(random_float(), random_float(), random_float())
+    }
 }
 
 impl Display for Color {

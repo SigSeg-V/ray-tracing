@@ -54,7 +54,7 @@ impl Camera {
         // });
 
         let time_before = Instant::now();
-        imgbuf.enumerate_pixels_mut().for_each(|(x, y, px)| {
+        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, px)| {
             let mut color = Color::new(0., 0., 0.);
             for _ in 0..self.num_samples {
                 let ray = self.get_ray(x, y);
