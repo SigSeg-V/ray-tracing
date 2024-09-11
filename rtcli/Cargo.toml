@@ -10,3 +10,7 @@ image = { version = "0.25", features = ["rayon", "png"] }
 rayon = "1.10"
 rand = "0.8.5"
 enum_dispatch = "0.3.13"
+glm = "0.2.3"
+
+#[profile.release]
+#debug = 1

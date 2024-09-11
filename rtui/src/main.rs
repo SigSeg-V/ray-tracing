@@ -21,7 +21,9 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "Ray Tracing in a Weekend",
         native_options,
-        Box::new(|cc| Ok(Box::new(eframe_template::TemplateApp::new(cc).unwrap()))),
+        Box::new(|cc| {
+            Ok(Box::new(eframe_template::TemplateApp::new(cc).unwrap()))
+        })
     )
 }
 

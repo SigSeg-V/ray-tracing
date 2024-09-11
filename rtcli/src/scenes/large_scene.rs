@@ -12,8 +12,8 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let fov = 25.;
     let focus_distance = 10.;
     let depth_of_field_angle = 0.5;
-    let num_samples = 500;
-    let max_bounce_depth = 64;
+    let num_samples = 100;
+    let max_bounce_depth = 32;
     let camera_pos = Point3::new(13., 2., 3.);
     let target = Point3::new(0., 0., 0.);
     let direction = camera_pos - target;

@@ -1,7 +1,10 @@
 use core::f32;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering::Relaxed;
 use std::time::Instant;
 
 use image::ImageBuffer;
+use log::warn;
 use rayon::prelude::*;
 
 use crate::{
@@ -42,16 +45,8 @@ impl Camera {
         let mut imgbuf: ImageBuffer<image::Rgb<u8>, Vec<u8>> =
             ImageBuffer::new(self.image_width, self.image_height);
 
-        // currently parallelisation this is extremely slow
-        // imgbuf.par_enumerate_pixels_mut().for_each(|(x,y,px)| {
-        //     let mut color = Color::new(0., 0., 0.);
-        //     for _ in 0..self.num_samples {
-        //         let ray = self.get_ray(x, y);
-        //         color += Self::ray_color(&ray, &world);
-        //     }
-
-        //     *px = image::Rgb((color * self.px_sample_scale).to_rgb());
-        // });
+        let count: AtomicU64 = AtomicU64::new(0);
+        let total = imgbuf.pixels().count() as f32;
 
         let time_before = Instant::now();
         imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, px)| {
@@ -62,6 +57,8 @@ impl Camera {
             }
 
             *px = image::Rgb((color * self.px_sample_scale).to_gamma().to_rgb());
+            count.fetch_add(1, Relaxed);
+            print!("\rCurrent progress - {:.2}%", (count.load(Relaxed) as f32 / total) * 100.);
         });
         let time_after = Instant::now();
         let time = time_after - time_before;
@@ -157,7 +154,7 @@ impl Camera {
         };
 
         let direction = px_sample - origin;
-        return Ray::new(origin, direction);
+        Ray::new(origin, direction)
     }
 
     fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Color {
@@ -190,8 +187,8 @@ impl Camera {
     fn depth_of_field_disk_sample(&self) -> Point3 {
         // get a random point in the camera DoF disk or lens
         let point = Vec3::random_in_unit_circle_xy();
-        return self.camera_pos
+        self.camera_pos
             + (point.x() * self.defocus_disk.0)
-            + (point.y() * self.defocus_disk.1);
+            + (point.y() * self.defocus_disk.1)
     }
 }
