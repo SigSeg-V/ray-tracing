@@ -22,7 +22,7 @@ fn main() -> eframe::Result {
         "Ray Tracing in a Weekend",
         native_options,
         Box::new(|cc| {
-            Ok(Box::new(eframe_template::TemplateApp::new(cc).unwrap()))
+            Ok(Box::new(rtui::TemplateApp::new(cc).unwrap()))
         })
     )
 }
@@ -40,7 +40,7 @@ fn main() {
             .start(
                 "the_canvas_id",
                 web_options,
-                Box::new(|cc| Ok(Box::new(eframe_template::TemplateApp::new(cc).unwrap()))),
+                Box::new(|cc| Ok(Box::new(rtui::TemplateApp::new(cc).unwrap()))),
             )
             .await;
 

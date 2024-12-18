@@ -1,11 +1,7 @@
 use enum_dispatch::enum_dispatch;
-
-use crate::{
-    object::HitRecord,
-    ray::Ray,
-    utils::rng::random_float,
-    vec3::{Color, Vec3},
-};
+use glam::Vec3A;
+use crate::{object::HitRecord, ray::Ray, utils::rng::random_float, vec3};
+use crate::prelude::*;
 
 #[enum_dispatch(Scatter)]
 #[derive(Debug, Clone)]
@@ -17,41 +13,42 @@ pub enum Material {
 
 #[enum_dispatch]
 pub trait Scatter {
-    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)>;
+    /// bounces ray, returns new ray and color
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)>;
 }
 
 #[derive(Debug, Clone)]
 pub struct Diffuse {
-    albedo: Color,
+    albedo: Vec3A,
 }
 
 impl Diffuse {
-    pub fn new(albedo: &Color) -> Self {
+    pub fn new(albedo: &Vec3A) -> Self {
         Self { albedo: *albedo }
     }
 }
 
 impl Scatter for Diffuse {
-    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        let mut scatter_direction = record.normal + Vec3::random_unit();
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)> {
+        let mut scatter_direction = record.normal + Vec3A::new_random_unit();
 
         if scatter_direction.is_near_zero() {
             scatter_direction = record.normal;
         }
 
-        let scattered = Ray::new(record.point, scatter_direction);
+        let scattered = Ray::new(&record.point, &scatter_direction);
         Some((scattered, self.albedo))
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Metallic {
-    albedo: Color, // color of the reflection/meterial
+    albedo: Vec3A, // color of the reflection/meterial
     fuzz: f32,     // size of the radius of diffusion on the reflection
 }
 
 impl Metallic {
-    pub fn new(albedo: &Color, fuzz: f32) -> Self {
+    pub fn new(albedo: &Vec3A, fuzz: f32) -> Self {
         Self {
             albedo: *albedo,
             fuzz: fuzz.min(1.),
@@ -60,13 +57,13 @@ impl Metallic {
 }
 
 impl Scatter for Metallic {
-    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        let mut reflected = ray.direction().reflect(&record.normal);
-        reflected = reflected.unit() + self.fuzz * Vec3::random_unit();
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)> {
+        let mut reflected = ray.direction().reflect(record.normal);
+        reflected = reflected.normalize() + self.fuzz * Vec3A::new_random_unit();
 
-        let scattered = Ray::new(record.point, reflected);
+        let scattered = Ray::new(&record.point, &reflected);
 
-        (scattered.direction().dot(&record.normal) > 0.).then_some((scattered, self.albedo))
+        (scattered.direction().dot(record.normal) > 0.).then_some((scattered, self.albedo))
     }
 }
 
@@ -88,27 +85,27 @@ impl Dielectric {
 }
 
 impl Scatter for Dielectric {
-    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Color)> {
-        let attenuation = Color::new(1., 1., 1.);
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)> {
+        let attenuation = Vec3A::new(1., 1., 1.);
         let ri = if record.front_face {
             1. / self.refractive_index
         } else {
             self.refractive_index
         };
 
-        let unit_direction = ray.direction().unit();
+        let unit_direction = ray.direction().normalize();
 
-        let cos_theta = (-unit_direction).dot(&record.normal);
+        let cos_theta = (-unit_direction).dot(record.normal);
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
 
         // must reflect the ray when sin(Theta') > 1 or with schlick's reflectance approximation
         let direction =
             if ri * sin_theta > 1. || self.schlick_reflectance(cos_theta, ri) > random_float() {
-                unit_direction.reflect(&record.normal)
+                unit_direction.reflect(record.normal)
             } else {
-                unit_direction.refract(&record.normal, ri)
+                unit_direction.refract(record.normal, ri)
             };
-        let refracted_ray = Ray::new(record.point, direction);
+        let refracted_ray = Ray::new(&record.point, &direction);
 
         Some((refracted_ray, attenuation))
     }

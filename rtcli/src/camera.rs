@@ -4,40 +4,40 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::time::Instant;
 
 use image::ImageBuffer;
-use log::warn;
 use rayon::prelude::*;
+use glam::Vec3A;
 
 use crate::{
     material::Scatter,
     object::{Hittable, World},
     ray::Ray,
     utils::{
-        self,
         math::{self, deg_to_rad},
         rng::random_float,
         Interval,
     },
-    vec3::{Color, Point3, Vec3},
 };
+
+pub use crate::prelude::*;
 
 pub struct Camera {
     aspect_ratio: f32,                      // ratio of image width / height
     image_width: u32,                       // image width in px
     image_height: u32,                      // image height in px
-    camera_pos: Point3,                     // center point of the camera
+    camera_pos: Vec3A,                     // center point of the camera
     fov: f32,                               // vertical fov of the camera
-    direction: Vec3, // unit vector for the direction the camera is pointing in
-    camera_up: Vec3, // Camera-relative up direction
-    camera_basis_frame: (Vec3, Vec3, Vec3), // camera basis frame
-    px_top_left: Vec3, // location of the top left pixel in the viewport
-    px_dx: Vec3,     // distance between pixels in the x axis in viewport
-    px_dy: Vec3,     // distance between pixels in the y axis in viewport
+    direction: Vec3A, // unit vector for the direction the camera is pointing in
+    camera_up: Vec3A, // Camera-relative up direction
+    camera_basis_frame: (Vec3A, Vec3A, Vec3A), // camera basis frame
+    px_top_left: Vec3A, // location of the top left pixel in the viewport
+    px_dx: Vec3A,     // distance between pixels in the x axis in viewport
+    px_dy: Vec3A,     // distance between pixels in the y axis in viewport
     num_samples: u32, // number of samples taken of each pixel in the frame
     px_sample_scale: f32, // Color scale factor for a sum of pixel samples
     max_bounce_depth: u32, // maximum number of bounces a ray can perform before expiring
     depth_of_field_angle: f32, // variation angle of rays through each pixel
     focus_distance: f32, // distance from the camera to the plane of perfect focus
-    defocus_disk: (Vec3, Vec3), // defocus disk x and y radius
+    defocus_disk: (Vec3A, Vec3A), // defocus disk x and y radius
 }
 
 impl Camera {
@@ -49,8 +49,8 @@ impl Camera {
         let total = imgbuf.pixels().count() as f32;
 
         let time_before = Instant::now();
-        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, px)| {
-            let mut color = Color::new(0., 0., 0.);
+        imgbuf.enumerate_pixels_mut().for_each(|(x, y, px)| {
+            let mut color = Vec3A::new(0., 0., 0.);
             for _ in 0..self.num_samples {
                 let ray = self.get_ray(x, y);
                 color += Self::ray_color(&ray, &world, self.max_bounce_depth);
@@ -76,9 +76,9 @@ impl Camera {
         fov: f32,
         focus_distance: f32,
         depth_of_field_angle: f32,
-        direction: Vec3,
-        camera_up: Vec3,
-        camera_pos: Vec3,
+        direction: Vec3A,
+        camera_up: Vec3A,
+        camera_pos: Vec3A,
     ) -> Camera {
         // calc img height, it has to be at least 1 px
         let image_height = (image_width as f32 / aspect_ratio) as u32;
@@ -95,9 +95,9 @@ impl Camera {
         let viewport_width = viewport_height * (real_aspect_ratio);
 
         // init camera basis frame
-        let w = direction.unit();
-        let u = camera_up.cross(&w).unit();
-        let v = w.cross(&u);
+        let w = direction.normalize();
+        let u = camera_up.cross(w).normalize();
+        let v = w.cross(u);
         let camera_basis_frame = (w, u, v);
 
         // sampling
@@ -145,7 +145,7 @@ impl Camera {
 
         let offset = Self::sample_square();
         let px_sample =
-            self.px_top_left + ((x + offset.x()) * self.px_dx) + ((y + offset.y()) * self.px_dy);
+            self.px_top_left + ((x + offset.x) * self.px_dx) + ((y + offset.y) * self.px_dy);
 
         let origin = if self.depth_of_field_angle > 0. {
             self.depth_of_field_disk_sample()
@@ -154,41 +154,40 @@ impl Camera {
         };
 
         let direction = px_sample - origin;
-        Ray::new(origin, direction)
+        Ray::new(&origin, &direction)
     }
 
-    fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Color {
+    fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Vec3A {
         if num_bounces == 0 {
             // hit recursion limit
-            return Color::new(0., 0., 0.);
+            return Vec3A::new(0., 0., 0.);
         }
         if let Some(record) = world.hit(ray, Interval::from(0.001, f32::INFINITY)) {
             // from 0.001 to fix shadow acne, where rays bounce many times off same point
-
             if let Some((scattered_ray, attenuation)) = record.material.scatter(ray, &record) {
                 return attenuation * Self::ray_color(&scattered_ray, world, num_bounces - 1);
             };
 
-            return Color::new(0., 0., 0.);
+            return Vec3A::new(0., 0., 0.);
         }
 
         // background color
-        let unit_direction = ray.direction().unit();
-        let scale = 0.5 * (unit_direction.y() + 1.); // blend in the y axis, midpoint halfway down
+        let unit_direction = ray.direction().normalize();
+        let scale = 0.5 * (unit_direction.y + 1.); // blend in the y axis, midpoint halfway down
 
         //             // white color                           ligh blue color
-        (1. - scale) * Color::new(1., 1., 1.) + scale * Color::new(0.5, 0.7, 1.)
+        (1. - scale) * Vec3A::new(1., 1., 1.) + scale * Vec3A::new(0.5, 0.7, 1.)
     }
 
-    fn sample_square() -> Vec3 {
-        Vec3::new(utils::rng::random_float() - 0.5, random_float() - 0.5, 0.)
+    fn sample_square() -> Vec3A {
+        Vec3A::new(random_float() - 0.5, random_float() - 0.5, 0.)
     }
 
-    fn depth_of_field_disk_sample(&self) -> Point3 {
+    fn depth_of_field_disk_sample(&self) -> Vec3A {
         // get a random point in the camera DoF disk or lens
-        let point = Vec3::random_in_unit_circle_xy();
+        let point = Vec3A::new_random_in_unit_circle_xy();
         self.camera_pos
-            + (point.x() * self.defocus_disk.0)
-            + (point.y() * self.defocus_disk.1)
+            + (point.x * self.defocus_disk.0)
+            + (point.y * self.defocus_disk.1)
     }
 }

@@ -57,7 +57,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
 
     let idx = IMAGE_DIMENSIONS.x * y + x;
 
-    var rng_state = init_rng(vec2u(x, y), IMAGE_DIMENSIONS.xy, IMAGE_DIMENSIONS.z);
+    var rng_state = init_rng(vec2u(x, y), IMAGE_DIMENSIONS.xy, u32(1));//IMAGE_DIMENSIONS.z);
 
     return vec4f(rng_next_float(&rng_state), rng_next_float(&rng_state), rng_next_float(&rng_state), 1.0);
  }

@@ -1,19 +1,19 @@
+use glam::Vec3A;
 use crate::{
     material::Material,
     utils::{self, Interval},
-    vec3::Point3,
 };
 
 use super::{HitRecord, Hittable};
 
 pub struct Sphere {
-    center: Point3,
+    center: Vec3A,
     radius: f32,
     material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32, material: Material) -> Self {
+    pub fn new(center: Vec3A, radius: f32, material: Material) -> Self {
         Self {
             center,
             radius,
@@ -51,9 +51,9 @@ impl Hittable for Sphere {
 
         let camera_to_center = self.center - *ray.origin();
 
-        let a = ray.direction().len_sq();
-        let h = camera_to_center.dot(ray.direction());
-        let c = camera_to_center.len_sq() - self.radius * self.radius;
+        let a = ray.direction().length_squared();
+        let h = camera_to_center.dot(*ray.direction());
+        let c = camera_to_center.length_squared() - self.radius * self.radius;
 
         if let Some((minus, plus)) = utils::math::quadratic_formula(a, h, c) {
             // find the closest root to the camera that is within tmin and tmax
@@ -67,7 +67,7 @@ impl Hittable for Sphere {
             let point = ray.at(root);
             let record = {
                 let outward_normal = (point - self.center) / self.radius;
-                let front_face = ray.direction().dot(&outward_normal) < 0.;
+                let front_face = ray.direction().dot(outward_normal) < 0.;
                 let normal = if front_face {
                     outward_normal
                 } else {

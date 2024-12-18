@@ -1,10 +1,12 @@
+use glam::Vec3A;
 use crate::camera::Camera;
 use crate::material::{self, Dielectric, Diffuse, Material, Metallic};
 use crate::object::{self, Object, Sphere, World};
 use crate::utils::rng::{random_float, random_float_range};
-use crate::vec3::{Color, Point3, Vec3};
 use image::ImageBuffer;
 use rand::{thread_rng, Rng};
+
+use crate::prelude::*;
 
 pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let aspect_ratio = 16. / 9.;
@@ -12,20 +14,20 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let fov = 25.;
     let focus_distance = 10.;
     let depth_of_field_angle = 0.5;
-    let num_samples = 100;
-    let max_bounce_depth = 32;
-    let camera_pos = Point3::new(13., 2., 3.);
-    let target = Point3::new(0., 0., 0.);
+    let num_samples = 16;
+    let max_bounce_depth = 16;
+    let camera_pos = Vec3A::new(13., 2., 3.);
+    let target = Vec3A::new(0., 0., 0.);
     let direction = camera_pos - target;
-    let camera_up = Vec3::new(0., 1., 0.);
+    let camera_up = Vec3A::new(0., 1., 0.);
 
     // world
     let mut world = World::new();
 
     // floor
-    let floor_material = Material::Diffuse(material::Diffuse::new(&Color::new(0.5, 0.5, 0.5)));
+    let floor_material = Material::Diffuse(material::Diffuse::new(&Vec3A::new(0.5, 0.5, 0.5)));
     world.push(Object::Sphere(object::Sphere::new(
-        Vec3::new(0., -1000., 0.),
+        Vec3A::new(0., -1000., 0.),
         1000.,
         floor_material,
     )));
@@ -34,7 +36,7 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let mut rng = thread_rng();
     for x in -15..15 {
         for y in -15..15 {
-            let centre = Point3::new(
+            let centre = Vec3A::new(
                 x as f32 + 0.9 * random_float(),
                 0.2,
                 y as f32 + 0.9 * random_float(),
@@ -43,46 +45,46 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
                 match rng.gen_range(0..100) {
                     0..=79 => {
                         // diffuse material
-                        let albedo = Color::random() * Color::random();
+                        let albedo = Vec3A::new_random() * Vec3A::new_random();
                         Material::Diffuse(material::Diffuse::new(&albedo))
                     }
                     80..=89 => {
                         // metal
-                        let albedo = Color::random() * Color::random();
+                        let albedo = Vec3A::new_random() * Vec3A::new_random();
                         let fuzz = random_float_range(0.0f32..0.5f32);
-                        Material::Metallic(material::Metallic::new(&albedo, fuzz))
+                        Material::Metallic(Metallic::new(&albedo, fuzz))
                     }
                     90..=99 => {
                         //glass
-                        Material::Dielectric(material::Dielectric::new(1.5))
+                        Material::Dielectric(Dielectric::new(1.5))
                     }
                     _ => unreachable!(),
                 }
             };
 
-            let obj = object::Object::Sphere(object::Sphere::new(centre, 0.2, random_material));
+            let obj = Object::Sphere(Sphere::new(centre, 0.2, random_material));
             world.push(obj);
         }
     }
 
-    let glass_material = Material::Dielectric(material::Dielectric::new(1.5));
-    let diffuse_material = Material::Diffuse(material::Diffuse::new(&Color::new(0.4, 0.3, 0.2)));
+    let glass_material = Material::Dielectric(Dielectric::new(1.5));
+    let diffuse_material = Material::Diffuse(Diffuse::new(&Vec3A::new(0.4, 0.3, 0.2)));
     let metal_material =
-        Material::Metallic(material::Metallic::new(&Color::new(0.7, 0.6, 0.5), 0.));
+        Material::Metallic(Metallic::new(&Vec3A::new(0.7, 0.6, 0.5), 0.));
 
     let big_spheres = vec![
-        Object::Sphere(object::Sphere::new(
-            Vec3::new(0., 1., 0.),
+        Object::Sphere(Sphere::new(
+            Vec3A::new(0., 1., 0.),
             1.0,
             glass_material,
         )),
-        Object::Sphere(object::Sphere::new(
-            Vec3::new(4., 1., 0.),
+        Object::Sphere(Sphere::new(
+            Vec3A::new(4., 1., 0.),
             1.0,
             metal_material,
         )),
-        Object::Sphere(object::Sphere::new(
-            Vec3::new(-4., 1., 0.),
+        Object::Sphere(Sphere::new(
+            Vec3A::new(-4., 1., 0.),
             1.0,
             diffuse_material,
         )),

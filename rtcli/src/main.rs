@@ -9,8 +9,6 @@ mod scenes;
 mod utils;
 mod vec3;
 
-use vec3::Color;
-
 use crate::prelude::*;
 
 fn main() -> Result<()> {

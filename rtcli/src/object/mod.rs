@@ -2,8 +2,9 @@ use crate::{
     material::{Material, Metallic},
     ray::Ray,
     utils::Interval,
-    vec3::{Point3, Vec3},
 };
+use glam::Vec3A;
+
 
 pub mod sphere;
 pub mod world;
@@ -13,8 +14,8 @@ pub use world::World;
 
 #[derive(Clone)]
 pub struct HitRecord {
-    pub point: Point3,
-    pub normal: Vec3,
+    pub point: Vec3A,
+    pub normal: Vec3A,
     pub t: f32,
     pub front_face: bool,
     pub material: Material,
@@ -23,8 +24,8 @@ pub struct HitRecord {
 impl HitRecord {
     /// sets the hit record
     /// BEWARE: `outward_normal` MUST be normalised
-    pub fn new(t: f32, ray: &Ray, point: Point3, outward_normal: Vec3, material: Material) -> Self {
-        let front_face = ray.direction().dot(&outward_normal) < 0.;
+    pub fn new(t: f32, ray: &Ray, point: Vec3A, outward_normal: Vec3A, material: Material) -> Self {
+        let front_face = ray.direction().dot(outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
         } else {

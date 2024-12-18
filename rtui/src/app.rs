@@ -37,7 +37,7 @@ impl TemplateApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Option<Self> {
         // Get the WGPU render state from the eframe creation context. This can also be retrieved
         // from `eframe::Frame` when you don't have a `CreationContext` available.
-        let wgpu_render_state = cc.wgpu_render_state.as_ref()?;
+        let wgpu_render_state = cc.wgpu_render_state.as_ref().expect("Failed to load render state");
 
         let device = &wgpu_render_state.device;
 
