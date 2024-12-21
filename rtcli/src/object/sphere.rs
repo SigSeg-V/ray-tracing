@@ -3,19 +3,29 @@ use crate::{
     material::Material,
     utils::{self, Interval},
 };
-
+use crate::ray::Ray;
 use super::{HitRecord, Hittable};
 
 pub struct Sphere {
-    center: Vec3A,
+    center: Ray,
     radius: f32,
     material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3A, radius: f32, material: Material) -> Self {
+    /// creates a new static sphere
+    pub fn new(center: &Vec3A, radius: f32, material: Material) -> Self {
         Self {
-            center,
+            center: Ray::new(center, &Vec3A::new(0., 0., 0.)),
+            radius,
+            material,
+        }
+    }
+
+    /// creates a sphere with translation
+    pub fn new_translated(start_center: &Vec3A, end_center: &Vec3A, radius: f32, material: Material) -> Self {
+        Self {
+            center: Ray::new(start_center, &(end_center - start_center)),
             radius,
             material,
         }
@@ -49,7 +59,9 @@ impl Hittable for Sphere {
         // We then use the quadratic formula to find t (or discriminant to find if there is at least one
         // intersection in the basic, unnormaled cased)
 
-        let camera_to_center = self.center - *ray.origin();
+        // to calculate blur from movement over shutter length
+        let current_center = self.center.at(ray.time());
+        let camera_to_center = current_center - ray.origin();
 
         let a = ray.direction().length_squared();
         let h = camera_to_center.dot(*ray.direction());
@@ -66,7 +78,7 @@ impl Hittable for Sphere {
             // assemble hit record
             let point = ray.at(root);
             let record = {
-                let outward_normal = (point - self.center) / self.radius;
+                let outward_normal = (point - current_center) / self.radius;
                 let front_face = ray.direction().dot(outward_normal) < 0.;
                 let normal = if front_face {
                     outward_normal

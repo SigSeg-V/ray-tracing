@@ -4,9 +4,8 @@ use std::sync::atomic::Ordering::Relaxed;
 use std::time::Instant;
 
 use image::ImageBuffer;
-use rayon::prelude::*;
 use glam::Vec3A;
-
+use rayon::prelude::*;
 use crate::{
     material::Scatter,
     object::{Hittable, World},
@@ -49,7 +48,7 @@ impl Camera {
         let total = imgbuf.pixels().count() as f32;
 
         let time_before = Instant::now();
-        imgbuf.enumerate_pixels_mut().for_each(|(x, y, px)| {
+        imgbuf.par_enumerate_pixels_mut().for_each(|(x, y, px)| {
             let mut color = Vec3A::new(0., 0., 0.);
             for _ in 0..self.num_samples {
                 let ray = self.get_ray(x, y);
@@ -63,7 +62,7 @@ impl Camera {
         let time_after = Instant::now();
         let time = time_after - time_before;
 
-        println!("Time taken\nNormal\t{}", time.as_millis());
+        println!("\nTime taken\t{:.3}", time.as_secs_f32());
 
         imgbuf
     }
@@ -154,9 +153,12 @@ impl Camera {
         };
 
         let direction = px_sample - origin;
-        Ray::new(&origin, &direction)
+        // for motion blur
+        let time = random_float();
+        Ray::new_time(&origin, &direction, time)
     }
 
+    //noinspection RsUnresolvedMethod -> RustRover doesn't like static dispatch enums
     fn ray_color(ray: &Ray, world: &World, num_bounces: u32) -> Vec3A {
         if num_bounces == 0 {
             // hit recursion limit

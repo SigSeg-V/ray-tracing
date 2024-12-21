@@ -25,9 +25,9 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let mut world = World::new();
 
     // floor
-    let floor_material = Material::Diffuse(material::Diffuse::new(&Vec3A::new(0.5, 0.5, 0.5)));
-    world.push(Object::Sphere(object::Sphere::new(
-        Vec3A::new(0., -1000., 0.),
+    let floor_material = Material::Diffuse(Diffuse::new(&Vec3A::new(0.5, 0.5, 0.5)));
+    world.push(Object::Sphere(Sphere::new(
+        &Vec3A::new(0., -1000., 0.),
         1000.,
         floor_material,
     )));
@@ -36,7 +36,7 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let mut rng = thread_rng();
     for x in -15..15 {
         for y in -15..15 {
-            let centre = Vec3A::new(
+            let center = Vec3A::new(
                 x as f32 + 0.9 * random_float(),
                 0.2,
                 y as f32 + 0.9 * random_float(),
@@ -46,7 +46,7 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
                     0..=79 => {
                         // diffuse material
                         let albedo = Vec3A::new_random() * Vec3A::new_random();
-                        Material::Diffuse(material::Diffuse::new(&albedo))
+                        Material::Diffuse(Diffuse::new(&albedo))
                     }
                     80..=89 => {
                         // metal
@@ -62,7 +62,8 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
                 }
             };
 
-            let obj = Object::Sphere(Sphere::new(centre, 0.2, random_material));
+            let end_center = center + Vec3A::new(0., random_float_range(0.0..0.5), 0.);
+            let obj = Object::Sphere(Sphere::new_translated(&center, &end_center, 0.2, random_material));
             world.push(obj);
         }
     }
@@ -74,17 +75,17 @@ pub fn large_scene() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
 
     let big_spheres = vec![
         Object::Sphere(Sphere::new(
-            Vec3A::new(0., 1., 0.),
+            &Vec3A::new(0., 1., 0.),
             1.0,
             glass_material,
         )),
         Object::Sphere(Sphere::new(
-            Vec3A::new(4., 1., 0.),
+            &Vec3A::new(4., 1., 0.),
             1.0,
             metal_material,
         )),
         Object::Sphere(Sphere::new(
-            Vec3A::new(-4., 1., 0.),
+            &Vec3A::new(-4., 1., 0.),
             1.0,
             diffuse_material,
         )),

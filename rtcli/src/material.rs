@@ -2,7 +2,7 @@ use enum_dispatch::enum_dispatch;
 use glam::Vec3A;
 use crate::{object::HitRecord, ray::Ray, utils::rng::random_float, vec3};
 use crate::prelude::*;
-
+use std::ops::Deref;
 #[enum_dispatch(Scatter)]
 #[derive(Debug, Clone)]
 pub enum Material {
@@ -36,7 +36,7 @@ impl Scatter for Diffuse {
             scatter_direction = record.normal;
         }
 
-        let scattered = Ray::new(&record.point, &scatter_direction);
+        let scattered = Ray::new_time(&record.point, &scatter_direction, ray.time());
         Some((scattered, self.albedo))
     }
 }
@@ -61,7 +61,7 @@ impl Scatter for Metallic {
         let mut reflected = ray.direction().reflect(record.normal);
         reflected = reflected.normalize() + self.fuzz * Vec3A::new_random_unit();
 
-        let scattered = Ray::new(&record.point, &reflected);
+        let scattered = Ray::new_time(&record.point, &reflected, ray.time());
 
         (scattered.direction().dot(record.normal) > 0.).then_some((scattered, self.albedo))
     }
@@ -105,7 +105,7 @@ impl Scatter for Dielectric {
             } else {
                 unit_direction.refract(record.normal, ri)
             };
-        let refracted_ray = Ray::new(&record.point, &direction);
+        let refracted_ray = Ray::new_time(&record.point, &direction, ray.time());
 
         Some((refracted_ray, attenuation))
     }

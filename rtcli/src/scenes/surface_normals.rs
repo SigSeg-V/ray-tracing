@@ -28,31 +28,31 @@ pub fn surface_normals() -> ImageBuffer<image::Rgb<u8>, Vec<u8>> {
     let mat_right = Material::Metallic(Metallic::new(&Vec3A::new(0.8, 0.6, 0.2), 0.0));
 
     world.push(Object::Sphere(Sphere::new(
-        Vec3A::new(0., -100.5, -1.),
+        &Vec3A::new(0., -100.5, -1.),
         100.,
         mat_grnd,
     )));
 
     world.push(Object::Sphere(Sphere::new(
-        Vec3A::new(0., 0., -1.2),
+        &Vec3A::new(0., 0., -1.2),
         0.5,
         mat_center,
     )));
 
     world.push(Object::Sphere(Sphere::new(
-        Vec3A::new(-1., 0., -1.),
+        &Vec3A::new(-1., 0., -1.),
         0.5,
         mat_left,
     )));
 
     world.push(Object::Sphere(Sphere::new(
-        Vec3A::new(-1., 0., -1.),
+        &Vec3A::new(-1., 0., -1.),
         0.4,
         mat_bubble,
     )));
 
     world.push(Object::Sphere(Sphere::new(
-        Vec3A::new(1., 0., -1.),
+        &Vec3A::new(1., 0., -1.),
         0.5,
         mat_right,
     )));
