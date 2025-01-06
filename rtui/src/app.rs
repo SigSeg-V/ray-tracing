@@ -146,22 +146,22 @@ impl TemplateApp {
 }
 
 impl eframe::App for TemplateApp {
-    /// Called by the frame work to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
-    }
-
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.canvas_size = ui.available_size();
-                    ui.vertical_centered_justified(|ui| {    
+                    ui.vertical_centered_justified(|ui| {
                         egui::Frame::canvas(ui.style()).show(ui, |ui| {
                         self.custom_painting(ui);
                         ui.ctx().request_repaint();
                     });
                 });
         });
+    }
+
+    /// Called by the frame work to save state before shutdown.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
     }
 }
 

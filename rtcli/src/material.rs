@@ -1,17 +1,23 @@
-use enum_dispatch::enum_dispatch;
 use glam::Vec3A;
 use crate::{object::HitRecord, ray::Ray, utils::rng::random_float, vec3};
 use crate::prelude::*;
-use std::ops::Deref;
-#[enum_dispatch(Scatter)]
 #[derive(Debug, Clone)]
 pub enum Material {
-    Diffuse,    // lambertian reflection
-    Metallic,   // angle of incident == angle of reflection + fuzz
-    Dielectric, // using snell's law
+    Diffuse(Diffuse),    // lambertian reflection
+    Metallic(Metallic),   // angle of incident == angle of reflection + fuzz
+    Dielectric(Dielectric), // using snell's law
 }
 
-#[enum_dispatch]
+impl Scatter for Material {
+    fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)> {
+        match &self {
+            Material::Diffuse(e) => e.scatter(ray,record),
+            Material::Metallic(e) => e.scatter(ray,record),
+            Material::Dielectric(e) => e.scatter(ray,record),
+        }
+    }
+}
+
 pub trait Scatter {
     /// bounces ray, returns new ray and color
     fn scatter(&self, ray: &Ray, record: &HitRecord) -> Option<(Ray, Vec3A)>;

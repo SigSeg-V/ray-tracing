@@ -4,11 +4,10 @@ use crate::{
     utils::Interval,
 };
 use glam::Vec3A;
-
+use image::codecs::png::FilterType::Paeth;
 
 pub mod sphere;
 pub mod world;
-use enum_dispatch::enum_dispatch;
 pub use sphere::Sphere;
 pub use world::World;
 
@@ -41,13 +40,20 @@ impl HitRecord {
     }
 }
 
-#[enum_dispatch]
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord>;
 }
 
-#[enum_dispatch(Hittable)]
 pub enum Object {
-    World,
-    Sphere,
+    World(World),
+    Sphere(Sphere),
+}
+
+impl Hittable for Object {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<HitRecord> {
+        match &self {
+            Object::World(e) => e.hit(ray, ray_t),
+            Object::Sphere(e) => e.hit(ray, ray_t),
+        }
+    }
 }
