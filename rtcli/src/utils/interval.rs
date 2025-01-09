@@ -1,5 +1,6 @@
 use core::f32;
 
+#[derive(Default, Debug)]
 pub struct Interval {
     pub min: f32,
     pub max: f32,
@@ -37,6 +38,15 @@ impl Interval {
             self.max
         } else {
             x
+        }
+    }
+
+    /// pads interval by `delta/2`
+    pub fn expand(&self, delta: f32) -> Self {
+        let padding = delta / 2.;
+        Self {
+            min: self.min - padding,
+            max: self.max + padding
         }
     }
 }

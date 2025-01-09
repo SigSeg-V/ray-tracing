@@ -8,6 +8,7 @@ mod ray;
 mod scenes;
 mod utils;
 mod vec3;
+mod aabb;
 
 use crate::prelude::*;
 
